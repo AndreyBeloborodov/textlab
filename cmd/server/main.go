@@ -3,16 +3,31 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/AndreyBeloborodov/textlab/models"
 )
 
 func main() {
+	modelRepository := models.NewMemoryRepository()
+	modelService := models.NewService(modelRepository)
+	modelHandler := models.NewHandler(modelService)
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World"))
-	})
+	mux.HandleFunc("POST /api/models", modelHandler.Create)
+	mux.HandleFunc("GET /api/models", modelHandler.GetAll)
+	mux.HandleFunc("GET /api/models/{id}", modelHandler.Get)
+	mux.HandleFunc("PUT /api/models/{id}", modelHandler.Update)
+	mux.HandleFunc("DELETE /api/models/{id}", modelHandler.Delete)
 
-	mux.Handle("/", http.FileServer(http.Dir("./web")))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.ServeFile(w, r, "./web/index.html")
+	})
 
 	log.Println("Server started on http://localhost:8080")
 
