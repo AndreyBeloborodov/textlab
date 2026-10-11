@@ -4,18 +4,18 @@ import "sync"
 
 type MemoryRepository struct {
 	mu     sync.RWMutex
-	models map[int]modelRecord
+	models map[int]Record
 	nextID int
 }
 
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		models: make(map[int]modelRecord),
+		models: make(map[int]Record),
 		nextID: 1,
 	}
 }
 
-func (r *MemoryRepository) Create(model modelRecord) (modelRecord, error) {
+func (r *MemoryRepository) Create(model Record) (Record, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -27,23 +27,23 @@ func (r *MemoryRepository) Create(model modelRecord) (modelRecord, error) {
 	return model, nil
 }
 
-func (r *MemoryRepository) Get(id int) (modelRecord, error) {
+func (r *MemoryRepository) Get(id int) (Record, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	model, ok := r.models[id]
 	if !ok {
-		return modelRecord{}, ErrNotFound
+		return Record{}, ErrNotFound
 	}
 
 	return model, nil
 }
 
-func (r *MemoryRepository) GetAll() ([]modelRecord, error) {
+func (r *MemoryRepository) GetAll() ([]Record, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	result := make([]modelRecord, 0, len(r.models))
+	result := make([]Record, 0, len(r.models))
 
 	for _, model := range r.models {
 		result = append(result, model)
@@ -52,12 +52,12 @@ func (r *MemoryRepository) GetAll() ([]modelRecord, error) {
 	return result, nil
 }
 
-func (r *MemoryRepository) Update(model modelRecord) (modelRecord, error) {
+func (r *MemoryRepository) Update(model Record) (Record, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if _, ok := r.models[model.ID]; !ok {
-		return modelRecord{}, ErrNotFound
+		return Record{}, ErrNotFound
 	}
 
 	r.models[model.ID] = model
